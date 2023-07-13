@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.all;
 
 entity delay_1 is
   generic (
-    WORD_WIDTH : natural
+    WORD_WIDTH : natural := 32
     );
   port (
     clk       : in  std_logic;

@@ -9,8 +9,8 @@ entity pe is
     port(
         clk_i, rst_i    : in std_logic;
 
-        cur_buffer_in   : in std_logic_vector(PRECISION - 1 downto 0);     
-        off_buffer_in   : in std_logic_vector(PRECISION - 1 downto 0);     
+        cb_in   : in std_logic_vector(PRECISION - 1 downto 0);     
+        off_in   : in std_logic_vector(PRECISION - 1 downto 0);     
         r_prev          : in std_logic_vector(PRECISION - 1 downto 0);
         r_next          : in std_logic_vector(PRECISION - 1 downto 0);
         nfifo_partial   : in std_logic_vector(PRECISION - 1 downto 0);
@@ -46,7 +46,7 @@ architecture Behaviour of pe is
     signal s21          : std_logic_vector(PRECISION - 1 downto 0);
     signal s22          : std_logic_vector(PRECISION - 1 downto 0);
     signal s31          : std_logic_vector(PRECISION - 1 downto 0);
-    signal sPRECISION          : std_logic_vector(PRECISION - 1 downto 0);
+    signal s32          : std_logic_vector(PRECISION - 1 downto 0);
     signal s41          : std_logic_vector(PRECISION - 1 downto 0);
     signal s42          : std_logic_vector(PRECISION - 1 downto 0);
     signal s51          : std_logic_vector(PRECISION - 1 downto 0);
@@ -59,7 +59,7 @@ architecture Behaviour of pe is
     signal m21          : std_logic_vector(PRECISION - 1 downto 0);
     signal m22          : std_logic_vector(PRECISION - 1 downto 0);
     signal m31          : std_logic_vector(PRECISION - 1 downto 0);
-    signal mPRECISION          : std_logic_vector(PRECISION - 1 downto 0);
+    signal m32          : std_logic_vector(PRECISION - 1 downto 0);
 
     signal w_h          : std_logic_vector(PRECISION - 1 downto 0);
     signal w_s          : std_logic_vector(PRECISION - 1 downto 0);
@@ -85,7 +85,7 @@ begin
         clk         => clk_i,
         rst         => rst_i,
 
-        s           => cur_buffer_in,
+        s           => cb_in,
         s_delayed   => rd_d 
     );
 
@@ -162,8 +162,8 @@ begin
     process(case_m2)
     begin
         case case_m2 is
-            when '0'    => sPRECISION <= (others => '0');
-            when others => sPRECISION <= off_buffer_in;
+            when '0'    => s32 <= (others => '0');
+            when others => s32 <= off_in;
         end case;
     end process;
 
@@ -233,7 +233,7 @@ begin
     port map( 
         ADD_SUB => '0', 
         FP_A    => s31, 
-        FP_B    => sPRECISION, 
+        FP_B    => s32, 
         clk     => clk_i, 
         FP_Z    => s51
     );
@@ -301,7 +301,7 @@ begin
        FP_Z     => r_pn_i 
     );
 
-    s11 <= cur_buffer_in;
+    s11 <= cb_in;
     m22 <= rd_d;
     m31 <= rd_d;
     accum_diff       <= r_diff_o;
