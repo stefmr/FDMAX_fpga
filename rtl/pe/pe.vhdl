@@ -28,6 +28,16 @@ end pe;
 architecture Behaviour of pe is
     signal rd_d         : std_logic_vector(PRECISION - 1 downto 0);
     signal rdd_d        : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_sum_vals   : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_sum_vals_d : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_pn_i       : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_pn_o       : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_current_i  : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_current_o  : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_current_d  : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_diff_i     : std_logic_vector(PRECISION - 1 downto 0);
+    signal r_diff_o     : std_logic_vector(PRECISION - 1 downto 0);
+
     signal r_prev_next_d: std_logic_vector(PRECISION - 1 downto 0);
     signal r_cell_out_d : std_logic_vector(PRECISION - 1 downto 0);
 
@@ -36,27 +46,40 @@ architecture Behaviour of pe is
     signal s21          : std_logic_vector(PRECISION - 1 downto 0);
     signal s22          : std_logic_vector(PRECISION - 1 downto 0);
     signal s31          : std_logic_vector(PRECISION - 1 downto 0);
-    signal s32          : std_logic_vector(PRECISION - 1 downto 0);
+    signal sPRECISION          : std_logic_vector(PRECISION - 1 downto 0);
     signal s41          : std_logic_vector(PRECISION - 1 downto 0);
     signal s42          : std_logic_vector(PRECISION - 1 downto 0);
+    signal s51          : std_logic_vector(PRECISION - 1 downto 0);
+    signal s52          : std_logic_vector(PRECISION - 1 downto 0);
+    signal s61          : std_logic_vector(PRECISION - 1 downto 0);
+    signal s62          : std_logic_vector(PRECISION - 1 downto 0);
 
     signal m11          : std_logic_vector(PRECISION - 1 downto 0);
     signal m12          : std_logic_vector(PRECISION - 1 downto 0);
     signal m21          : std_logic_vector(PRECISION - 1 downto 0);
     signal m22          : std_logic_vector(PRECISION - 1 downto 0);
     signal m31          : std_logic_vector(PRECISION - 1 downto 0);
-    signal m32          : std_logic_vector(PRECISION - 1 downto 0);
+    signal mPRECISION          : std_logic_vector(PRECISION - 1 downto 0);
 
     signal w_h          : std_logic_vector(PRECISION - 1 downto 0);
     signal w_s          : std_logic_vector(PRECISION - 1 downto 0);
     signal w_v          : std_logic_vector(PRECISION - 1 downto 0);
+
+    signal case_m1      : std_logic;
+    signal case_m2      : std_logic;
+    signal case_m3      : std_logic;
+    signal case_m4      : std_logic;
+
+    signal case_d1      : std_logic;
+    signal case_d2      : std_logic;
+    signal case_d3      : std_logic;
 begin
 
     -------- DELAYS --------
     
     R_Z : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
@@ -68,7 +91,7 @@ begin
 
     R_DELAY_2 : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
@@ -80,7 +103,7 @@ begin
 
     R_OUT : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
@@ -92,7 +115,7 @@ begin
 
     R_PREV_NEXT : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
@@ -104,19 +127,19 @@ begin
     
     R_CURRENT : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
         rst         => rst_i,
 
         s           => r_current_i,
-        s_delayed   => r_current_d
+        s_delayed   => s31
     );
 
     R_DIFF : entity work.delay_1
     generic map(
-        WORD_WIDTH => 32
+        WORD_WIDTH => PRECISION
     )
     port map(
         clk         => clk_i,
@@ -131,32 +154,32 @@ begin
     process(case_m1)
     begin
         case case_m1 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => s12 <= rdd_d;
+            when others => s12 <= r_sum_vals_d;
         end case;
     end process;
 
     process(case_m2)
     begin
         case case_m2 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => sPRECISION <= (others => '0');
+            when others => sPRECISION <= off_buffer_in;
         end case;
     end process;
 
     process(case_m3)
     begin
         case case_m3 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => s41 <= r_next;
+            when others => s41 <= (others => '0');
         end case;
     end process;
 
     process(case_m4)
     begin
         case case_m4 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => s42 <= r_prev;
+            when others => s42 <= nfifo_partial;
         end case;
     end process;
 
@@ -165,107 +188,122 @@ begin
     process(case_d1)
     begin
         case case_d1 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => final_res        <= r_sum_vals_d;
+            when others => incomplete_pfifo <= r_sum_vals_d;
         end case;
     end process;
 
     process(case_d2)
     begin
         case case_d2 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => partial_next_PE  <= r_pn_o;
+            when others => partial_nfifo    <= r_pn_o;
         end case;
     end process;
 
     process(case_d3)
     begin
         case case_d3 is
-            when '0'    => ;
-            when others => ;
+            when '0'    => partial_prev_PE  <= r_pn_o;
+            when others => partial_haloadd  <= r_pn_o;
         end case;
     end process;
-    
+
     -------- ADDERS --------
 
     ADD_01 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => s11, 
+        FP_B    => s12, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => m11 
     );
 
     ADD_02 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => s21, 
+        FP_B    => s22, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => r_current_i
     );
 
     ADD_03 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => s31, 
+        FP_B    => sPRECISION, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => s51
     );
 
     ADD_04 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => s41, 
+        FP_B    => s42, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => s52
     );
 
     ADD_05 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => s51, 
+        FP_B    => s52, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => r_sum_vals
     );
 
     ADD_06 : entity work.FPadd
     port map( 
         ADD_SUB => '0', 
-        FP_A    => , 
-        FP_B    => , 
+        FP_A    => r_diff_o, 
+        FP_B    => s62, 
         clk     => clk_i, 
-        FP_Z    => 
+        FP_Z    => r_diff_i
     );
+
+    DIFF : entity work.FPadd
+    port map( 
+        ADD_SUB => '1', 
+        FP_A    => rdd_d, 
+        FP_B    => r_sum_vals_d, 
+        clk     => clk_i, 
+        FP_Z    => s62
+    );
+
 
     -------- MULTIPLIERS --------
 
     MUL_01  : entity work.FPmul
     port map( 
-       FP_A     => , 
+       FP_A     => m11, 
        FP_B     => w_h, 
        clk      => clk_i, 
-       FP_Z     => 
+       FP_Z     => s21 
     );
 
     MUL_02  : entity work.FPmul
     port map( 
        FP_A     => w_s, 
-       FP_B     => , 
+       FP_B     => m22, 
        clk      => clk_i, 
-       FP_Z     => 
+       FP_Z     => s22
     );
 
     MUL_03  : entity work.FPmul
     port map( 
-       FP_A     => , 
+       FP_A     => m31, 
        FP_B     => w_v, 
        clk      => clk_i, 
        FP_Z     => r_pn_i 
     );
+
+    s11 <= cur_buffer_in;
+    m22 <= rd_d;
+    m31 <= rd_d;
+    accum_diff       <= r_diff_o;
 
 end Behaviour;
