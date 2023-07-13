@@ -6,7 +6,7 @@ use work.types.all;
 entity top_module is
         generic(FLOAT_SIZE : natural := 32);
         port(
-                clk_i : in std_logic;
+                sysclk : in std_logic;
                 rst_i : in std_logic;
 
                 data_valid    : in std_logic;
@@ -36,8 +36,17 @@ architecture Behavioral of top_module is
 
         signal cb_in          : array_t(2 downto 0);
         signal off_in         : array_t(2 downto 0);
+        signal internal_clk     : std_logic;
+        signal locked_tmp       : std_logic;
 begin
 
+        CLK : entity work.clk_wiz_0
+        port map(
+                clk_200mhz => internal_clk,
+                reset => rst_i,
+                sysclk => sysclk,
+                locked => locked_tmp 
+                );
 
         PE_ARRAY_INST : entity work.pe_array
         generic map(
@@ -45,8 +54,8 @@ begin
                 PRECISION => FLOAT_SIZE
         )
         port map(
-                clk_i => clk_i,
-                rst_i => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
                 cb_in => cb_in,
                 off_in => off_in,
                 complete_adds => completed_sums,
@@ -60,8 +69,8 @@ begin
                 FLOAT_SIZE => FLOAT_SIZE
         )
         port map(
-                clk_i => clk_i,
-                rst_i => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
                 data_i => nfifo_v,
                 re => '0',
                 we => '0',
@@ -74,8 +83,8 @@ begin
                 FLOAT_SIZE => 32
         )
         port map(
-                clk_i => clk_i,
-                rst_i => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
                 data_i => pfifo_v,
                 -- Hardcodeadisimo
                 re => newbuf_write,
@@ -85,8 +94,8 @@ begin
 
         B_CONTROLLER: entity work.buffer_controller
         port map(
-                clk_i           => clk_i,
-                rst_i           => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
 
                 start           => data_valid,
                 stop_cond       => '0',
@@ -103,8 +112,8 @@ begin
         CURRENT_BFIFO : entity work.generic_fifo
         generic map(FLOAT_SIZE => FLOAT_SIZE)
         port map(
-                clk_i   => clk_i,
-                rst_i   => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
 
                 data_i  => data_stream_i,
                 re      => current_read,
@@ -115,8 +124,8 @@ begin
         OFFSET_BFIFO : entity work.generic_fifo
         generic map(FLOAT_SIZE => FLOAT_SIZE)
         port map(
-                clk_i   => clk_i,
-                rst_i   => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
 
                 data_i  => data_stream_i,
                 re      => offset_read,
@@ -127,8 +136,8 @@ begin
         NEWBUF_BFIFO : entity work.generic_fifo
         generic map(FLOAT_SIZE => FLOAT_SIZE)
         port map(
-                clk_i   => clk_i,
-                rst_i   => rst_i,
+                clk_i => internal_clk,
+                rst_i => not locked_tmp or rst_i,
 
                 data_i  => (FLOAT_SIZE - 1 downto 0 => (others => '0')) & completed_sums(1) & completed_sums(0),
                 re      => newbuf_read,

@@ -15,6 +15,21 @@ entity pe is
         r_next          : in std_logic_vector(PRECISION - 1 downto 0);
         nfifo_partial   : in std_logic_vector(PRECISION - 1 downto 0);
 
+
+
+        case_m1      : in std_logic;
+        case_m2      : in std_logic;
+        case_m3      : in std_logic;
+        case_m4      : in std_logic;
+
+        case_d1      : in std_logic;
+        case_d2      : in std_logic;
+        case_d3      : in std_logic;
+
+
+
+
+
         final_res       : out std_logic_vector(PRECISION - 1 downto 0);     
         incomplete_pfifo: out std_logic_vector(PRECISION - 1 downto 0);     
         partial_next_PE : out std_logic_vector(PRECISION - 1 downto 0);
@@ -22,6 +37,7 @@ entity pe is
         partial_prev_PE : out std_logic_vector(PRECISION - 1 downto 0);
         partial_haloadd : out std_logic_vector(PRECISION - 1 downto 0);
         accum_diff      : out std_logic_vector(PRECISION - 1 downto 0)
+
     );
 end pe;
 
@@ -61,18 +77,10 @@ architecture Behaviour of pe is
     signal m31          : std_logic_vector(PRECISION - 1 downto 0);
     signal m32          : std_logic_vector(PRECISION - 1 downto 0);
 
-    signal w_h          : std_logic_vector(PRECISION - 1 downto 0);
-    signal w_s          : std_logic_vector(PRECISION - 1 downto 0);
-    signal w_v          : std_logic_vector(PRECISION - 1 downto 0);
+    signal w_h          : std_logic_vector(PRECISION - 1 downto 0) := (others => '0');
+    signal w_s          : std_logic_vector(PRECISION - 1 downto 0) := (others => '0');
+    signal w_v          : std_logic_vector(PRECISION - 1 downto 0) := (others => '0');
 
-    signal case_m1      : std_logic;
-    signal case_m2      : std_logic;
-    signal case_m3      : std_logic;
-    signal case_m4      : std_logic;
-
-    signal case_d1      : std_logic;
-    signal case_d2      : std_logic;
-    signal case_d3      : std_logic;
 begin
 
     -------- DELAYS --------
@@ -151,7 +159,7 @@ begin
 
     -------- MUXES --------
 
-    process(case_m1)
+    process(case_m1, rdd_d, r_sum_vals_d)
     begin
         case case_m1 is
             when '0'    => s12 <= rdd_d;
@@ -159,7 +167,7 @@ begin
         end case;
     end process;
 
-    process(case_m2)
+    process(case_m2, off_in)
     begin
         case case_m2 is
             when '0'    => s32 <= (others => '0');
@@ -167,7 +175,7 @@ begin
         end case;
     end process;
 
-    process(case_m3)
+    process(case_m3, r_next)
     begin
         case case_m3 is
             when '0'    => s41 <= r_next;
@@ -175,7 +183,7 @@ begin
         end case;
     end process;
 
-    process(case_m4)
+    process(case_m4, r_prev, nfifo_partial)
     begin
         case case_m4 is
             when '0'    => s42 <= r_prev;
@@ -185,27 +193,39 @@ begin
 
     -------- DEMUXES --------
 
-    process(case_d1)
+    process(case_d1, r_sum_vals_d)
     begin
         case case_d1 is
-            when '0'    => final_res        <= r_sum_vals_d;
-            when others => incomplete_pfifo <= r_sum_vals_d;
+            when '0'    => 
+                    final_res        <= r_sum_vals_d;
+                    incomplete_pfifo <= (others => '0');
+            when others => 
+                    incomplete_pfifo <= r_sum_vals_d;
+                    final_res        <= (others => '0');
         end case;
     end process;
 
-    process(case_d2)
+    process(case_d2, r_pn_o)
     begin
         case case_d2 is
-            when '0'    => partial_next_PE  <= r_pn_o;
-            when others => partial_nfifo    <= r_pn_o;
+            when '0'    => 
+                    partial_next_PE  <= r_pn_o;
+                    partial_nfifo <= (others => '0');
+            when others => 
+                    partial_nfifo    <= r_pn_o;
+                    partial_next_PE  <= (others => '0');
         end case;
     end process;
 
-    process(case_d3)
+    process(case_d3, r_pn_o)
     begin
         case case_d3 is
-            when '0'    => partial_prev_PE  <= r_pn_o;
-            when others => partial_haloadd  <= r_pn_o;
+            when '0'    => 
+                    partial_prev_PE  <= r_pn_o;
+                    partial_haloadd  <= (others => '0');
+            when others => 
+                    partial_haloadd  <= r_pn_o;
+                    partial_prev_PE <= (others => '0');
         end case;
     end process;
 

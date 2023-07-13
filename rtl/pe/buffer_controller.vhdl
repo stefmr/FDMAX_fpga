@@ -69,5 +69,9 @@ begin
                 col_counter     => col_count,
                 row_counter     => row_count 
         );
+
+        newbuf_read <= '0';
+        current_write <= '0';
+        offset_write <= '0';
         
 end rtl;

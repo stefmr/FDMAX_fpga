@@ -41,6 +41,15 @@ begin
                         r_next          => backward_points(i + 1),
                         nfifo_partial   => (others => '0'),
 
+                        case_m1         => '0',
+                        case_m2         => '0',
+                        case_m3         => '0',
+                        case_m4         => '1',
+
+                        case_d1         => '0',
+                        case_d2         => '0',
+                        case_d3         => '0',
+
                         final_res       => complete_adds(i),
                         incomplete_pfifo=> open,
                         partial_next_PE => forward_points(i),
@@ -65,6 +74,16 @@ begin
                         r_next          => backward_points(1),
                         nfifo_partial   => (others => '0'),
 
+
+                        case_m1         => '0',
+                        case_m2         => '0',
+                        case_m3         => '0',
+                        case_m4         => '1',
+
+                        case_d1         => '0',
+                        case_d2         => '0',
+                        case_d3         => '1',
+
                         final_res       => complete_adds(0),
                         incomplete_pfifo=> open,
                         partial_next_PE => forward_points(0),
@@ -87,6 +106,16 @@ begin
                         r_prev          => forward_points(N_PE - 1),
                         r_next          => (others => '0'),
                         nfifo_partial   => (others => '0'),
+
+                        case_m1         => '0',
+                        case_m2         => '0',
+                        case_m3         => '1',
+                        case_m4         => '0',
+
+                        case_d1         => '1',
+                        case_d2         => '1',
+                        case_d3         => '0',
+
 
                         final_res       => open,
                         incomplete_pfifo=> p_v,

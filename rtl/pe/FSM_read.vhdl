@@ -62,6 +62,7 @@ begin
                 nb_we  <= '0'; 
 
                 col_counter <= '0';
+                row_counter <= '0';
 
                 case state_reg is
                         when s0_idle            => 
